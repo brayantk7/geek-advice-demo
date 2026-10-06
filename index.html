@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geek Advice - Control Panel</title>
+  <style>
+    :root { --bg:#f5f7fa; --card:#ffffff; --ink:#1b2430; --muted:#5b6675; --accent:#1f5fe0; --line:#dde3ec; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#10151c; --card:#18202b; --ink:#e8edf4; --muted:#9aa6b5; --accent:#6c9bff; --line:#2a3544; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; padding:32px; background:var(--bg); color:var(--ink);
+           font-family: "Segoe UI", system-ui, sans-serif; font-size:18px; }
+    h1 { margin:0 0 4px; font-size:2rem; }
+    .sub { margin:0 0 28px; color:var(--muted); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px; max-width:960px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; }
+    .card h2 { margin:0 0 12px; font-size:1.2rem; }
+    button { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 16px;
+             font-size:1rem; cursor:pointer; }
+    button:focus-visible { outline:3px solid var(--ink); outline-offset:2px; }
+    .out { margin-top:14px; min-height:72px; color:var(--muted); }
+    .out ul { margin:0; padding-left:20px; color:var(--ink); }
+  </style>
+</head>
+<body>
+  <h1>Geek Advice Control Panel</h1>
+  <p class="sub">Each button calls the Python backend and shows the data it returns.</p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>System Status</h2>
+      <button onclick="load('status', 'out-status')">Check status</button>
+      <div class="out" id="out-status">Press the button to load data.</div>
+    </section>
+    <section class="card">
+      <h2>Recent Users</h2>
+      <button onclick="load('users', 'out-users')">Load users</button>
+      <div class="out" id="out-users">Press the button to load data.</div>
+    </section>
+    <section class="card">
+      <h2>Daily Metrics</h2>
+      <button onclick="load('metrics', 'out-metrics')">Load metrics</button>
+      <div class="out" id="out-metrics">Press the button to load data.</div>
+    </section>
+    <section class="card">
+      <h2>System Alerts</h2>
+      <button onclick="load('alerts', 'out-alerts')">Check alerts</button>
+      <div class="out" id="out-alerts">Press the button to load data.</div>
+    </section>
+  </div>
+
+  <script>
+    // How each endpoint's data is shown on the page
+    const renderers = {
+      status:  d => `<ul><li>Server: ${d.server}</li><li>Version: ${d.version}</li><li>Uptime: ${d.uptime}</li></ul>`,
+      users:   d => `<ul>${d.map(u => `<li>${u.name} (${u.role})</li>`).join("")}</ul>`,
+      metrics: d => `<ul><li>Visits today: ${d.visits_today}</li><li>New users: ${d.new_users}</li><li>Orders: ${d.orders}</li></ul>`,
+      alerts:  d => `<ul>${d.map(a => `<li>${a.level}: ${a.message}</li>`).join("")}</ul>`,
+    };
+
+    // Frontend -> backend: request the endpoint, then draw the result
+    async function load(endpoint, outputId) {
+      const out = document.getElementById(outputId);
+      out.textContent = "Loading...";
+      try {
+        const response = await fetch("/api/" + endpoint);
+        const data = await response.json();
+        out.innerHTML = renderers[endpoint](data);
+      } catch (error) {
+        out.textContent = "Could not reach the backend. Is the server running?";
+      }
+    }
+  </script>
+</body>
+</html>
